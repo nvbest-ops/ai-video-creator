@@ -1,0 +1,62 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "script": {
+      "type": "string"
+    },
+    "style": {
+      "type": "string",
+      "enum": [
+        "cinematic",
+        "animated",
+        "documentary",
+        "commercial",
+        "social",
+        "explainer"
+      ]
+    },
+    "aspect_ratio": {
+      "type": "string",
+      "enum": [
+        "16:9",
+        "9:16",
+        "1:1"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "generating",
+        "ready",
+        "failed"
+      ]
+    },
+    "duration_seconds": {
+      "type": "number"
+    },
+    "final_video_url": {
+      "type": "string"
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "voiceover_enabled": {
+      "type": "boolean"
+    },
+    "music_enabled": {
+      "type": "boolean"
+    },
+    "voice_id": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "VideoProject"
+}
