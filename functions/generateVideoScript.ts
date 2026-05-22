@@ -19,47 +19,61 @@ Deno.serve(async (req) => {
     const openai = new OpenAI({ apiKey: Deno.env.get('OPENAI_API_KEY') });
 
     const styleGuide = {
-      cinematic: 'dramatic, high-production cinematic visuals with rich lighting and depth',
-      animated: 'vibrant, animated style with bold colors and smooth motion',
-      documentary: 'realistic, journalistic style with natural lighting',
-      commercial: 'polished, professional commercial style, clean and modern',
-      social: 'trendy, fast-paced social media style optimized for engagement',
-      explainer: 'clear, educational style with clean visuals and simple graphics'
+      cinematic: 'dramatic, high-production cinematic visuals with rich lighting, depth of field, and film-quality storytelling',
+      animated: 'vibrant, animated style with bold colors, smooth motion, and expressive characters',
+      documentary: 'realistic, journalistic style with natural lighting, authentic feel, and compelling narrative',
+      commercial: 'polished, professional commercial style — clean, modern, aspirational and persuasive',
+      social: 'trendy, fast-paced social media style — punchy, scroll-stopping, optimized for maximum engagement',
+      explainer: 'clear, educational style with clean visuals, simple graphics and step-by-step clarity'
     };
 
-    const systemPrompt = `You are an expert video director and scriptwriter. Create a 60-second video broken into exactly 8 scenes (each ~7-8 seconds). 
-Style: ${styleGuide[style] || styleGuide.cinematic}.
-Aspect ratio: ${aspect_ratio || '16:9'}.
+    const systemPrompt = `You are NOVA — an elite AI Video Content Director and Superagent specializing in 60-second viral video creation. You combine the creative vision of a world-class director with the strategic mind of a content marketer.
 
-Return a JSON object with this exact structure:
+Your mission: Transform any topic into a compelling, professionally structured 60-second video that captivates audiences from the first frame to the last.
+
+VIDEO SPECS:
+- Total duration: exactly 60 seconds
+- Structure: exactly 8 scenes, each 7-8 seconds
+- Style: ${styleGuide[style] || styleGuide.cinematic}
+- Aspect ratio: ${aspect_ratio || '16:9'}
+
+YOUR CREATIVE PRINCIPLES:
+1. HOOK in scene 1 — grab attention in the first 3 seconds
+2. BUILD tension or curiosity through scenes 2-5
+3. DELIVER the payoff or key message in scenes 6-7
+4. END with a strong call-to-action or memorable closing in scene 8
+5. Every narration line must be punchy, vivid, and perfectly timed to ~7 seconds when spoken aloud
+6. Visual prompts must be hyper-specific — describe lighting, camera angle, subject, mood, color palette
+7. Narration and visuals must work in perfect harmony
+
+Return a JSON object with this EXACT structure (no extra fields):
 {
-  "title": "Short catchy title",
-  "full_script": "Complete narration script",
+  "title": "Short catchy title (max 8 words)",
+  "full_script": "Complete flowing narration script as one paragraph",
+  "hook": "One-line description of the opening hook",
   "scenes": [
     {
       "scene_number": 1,
-      "description": "What happens visually in this scene",
-      "narration": "Exact words spoken in this scene",
-      "visual_prompt": "Detailed AI image generation prompt for this scene",
+      "description": "Detailed visual description of what happens on screen",
+      "narration": "Exact spoken words — punchy, ~15-25 words, fits 7 seconds",
+      "visual_prompt": "Hyper-detailed DALL-E prompt: subject, setting, lighting, camera angle, mood, color palette, style",
       "duration_seconds": 7
     }
   ]
-}
-
-Make it compelling, professional, and optimized for the ${style || 'cinematic'} style. Total narration should fit within 60 seconds when spoken.`;
+}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Create a 60-second video about: ${prompt}` }
+        { role: 'user', content: `Create a powerful 60-second ${style || 'cinematic'} video about: ${prompt}` }
       ],
-      response_format: { type: 'json_object' }
+      response_format: { type: 'json_object' },
+      temperature: 0.85
     });
 
     const scriptData = JSON.parse(completion.choices[0].message.content);
 
-    // Update the project with title and script
     if (project_id) {
       await base44.entities.VideoProject.update(project_id, {
         title: scriptData.title,
@@ -68,8 +82,7 @@ Make it compelling, professional, and optimized for the ${style || 'cinematic'} 
         duration_seconds: 60
       });
 
-      // Create scene records
-      const scenePromises = scriptData.scenes.map(scene =>
+      const scenePromises = scriptData.scenes.map((scene: any) =>
         base44.entities.VideoScene.create({
           project_id,
           scene_number: scene.scene_number,
