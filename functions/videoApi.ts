@@ -1,6 +1,5 @@
 /**
  * videoApi — unified API gateway for the NOVA video creator frontend
- * Handles: createProject, listProjects, getProject, getScenes, updateProjectStatus
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
@@ -17,7 +16,7 @@ Deno.serve(async (req) => {
       const project = await base44.entities.VideoProject.create({
         prompt: body.prompt,
         style: body.style || 'cinematic',
-        aspect_ratio: body.aspect_ratio || '16:9',
+        aspect_ratio: body.aspect_ratio || '9:16',
         voiceover_enabled: body.voiceover_enabled ?? true,
         music_enabled: false,
         voice_id: body.voice_id || '21m00Tcm4TlvDq8ikWAM',
@@ -28,7 +27,7 @@ Deno.serve(async (req) => {
     }
 
     if (_action === 'listProjects') {
-      const projects = await base44.entities.VideoProject.list({ sort: '-created_date', limit: 20 });
+      const projects = await base44.entities.VideoProject.list({ sort: '-created_date', limit: 30 });
       return Response.json({ success: true, projects });
     }
 
@@ -47,6 +46,16 @@ Deno.serve(async (req) => {
 
     if (_action === 'updateProjectStatus') {
       await base44.entities.VideoProject.update(body.project_id, { status: body.status });
+      return Response.json({ success: true });
+    }
+
+    if (_action === 'deleteProject') {
+      // Delete all scenes first
+      const scenes = await base44.entities.VideoScene.filter({ project_id: body.project_id });
+      for (const scene of scenes) {
+        await base44.entities.VideoScene.delete(scene.id);
+      }
+      await base44.entities.VideoProject.delete(body.project_id);
       return Response.json({ success: true });
     }
 
